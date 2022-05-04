@@ -25,10 +25,11 @@
           </li>
         </ul>
         <p>
-          <router-link to="#" v-if="currentUser.id === user.id">
-            <button type="submit" class="btn btn-primary">
-              edit
-            </button>
+          <router-link
+            :to="{ name: 'user-edit', params: { id: currentUser.id } }"
+            v-if="currentUser.id == user.profile.id"
+          >
+            <button type="submit" class="btn btn-primary">edit</button>
           </router-link>
           <template v-else>
             <button
@@ -52,7 +53,7 @@
   </div>
 </template>
 
-<script>
+<script>  //user.profile.id = 1    currentUser.id = 1
 const dummyUser = {
   currentUser: {
     id: 1,
@@ -74,23 +75,23 @@ export default {
   data() {
     return {
       currentUser: {},
-      user: {}
+      user: {},
     };
   },
   methods: {
     fetchUser() {
       this.currentUser = dummyUser.currentUser;
-      this.user = this.initialUser
+      this.user = this.initialUser;
     },
     addFollowing() {
-      this.user.isFollowed = true
+      this.user.isFollowed = true;
     },
     deleteFollowing() {
-      this.user.isFollowed = false
-    }
+      this.user.isFollowed = false;
+    },
   },
   created() {
-    this.fetchUser()
-  }
+    this.fetchUser();
+  },
 };
 </script>

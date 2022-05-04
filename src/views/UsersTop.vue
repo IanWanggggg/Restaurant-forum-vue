@@ -16,50 +16,9 @@
 <script>
 import NavTabs from "../components/NavTabs.vue";
 import UsersTopUser from "../components/UsersTopUser.vue";
+import usersAPI from '../api/users'
+import {Toast} from '../utility/helpers'
 
-const dummyData = {
-  users: [
-    {
-      id: 1,
-      name: "root",
-      email: "root@example.com",
-      password: "$2a$10$15QlzrLsEi9vBujiAQckgOuH/gEZjE9jrFc3VUhlfu7FrikYl2qPC",
-      isAdmin: true,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-    {
-      id: 2,
-      name: "user1",
-      email: "user1@example.com",
-      password: "$2a$10$w/aEQgNLYZT/8efkQgC1OOUHqpjT1uJejcb0rfHUJCVm71bS8NsTO",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-    {
-      id: 3,
-      name: "user2",
-      email: "user2@example.com",
-      password: "$2a$10$aKNVtGam2Y3sVxssM0vqBOh1Ma1f263CTtIfgyypD6AhDvtSyy426",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-  ],
-};
 export default {
   components: {
     NavTabs,
@@ -71,8 +30,18 @@ export default {
     };
   },
   methods: {
-    fetchUsers() {
-      this.users = dummyData.users;
+    async fetchUsers() {
+      try {
+        const {data} = await usersAPI.getUserTop()
+        console.log(data)
+        this.users = data.users
+      }
+      catch(error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法取得美食達人，請稍後再試'
+        })
+      }
     },
   },
   created() {

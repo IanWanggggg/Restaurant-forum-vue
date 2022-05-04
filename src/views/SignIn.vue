@@ -34,7 +34,11 @@
         />
       </div>
 
-      <button class="btn btn-lg btn-primary btn-block mb-3" type="submit">
+      <button
+        class="btn btn-lg btn-primary btn-block mb-3"
+        type="submit"
+        :disabled="isProcessing"
+      >
         Submit
       </button>
 
@@ -50,20 +54,56 @@
 </template>
 
 <script>
+import authorizationAPI from "../api/authorization";
+import { Toast } from "../utility/helpers";
+
 export default {
   data() {
     return {
       email: "",
       password: "",
+      isProcessing: false,
     };
   },
   methods: {
-    handleSubmit() {
-      const data = JSON.stringify({
-        email: this.email,
-        password: this.password,
-      })
-      console.log(data)
+    async handleSubmit() {
+      try {
+        if (!this.email || !this.password) {
+          Toast.fire({
+            icon: "warning",
+            title: "請填入 email 和 password",
+          });
+          return;
+        }
+        
+        this.isProcessing = true;
+
+        const response = await authorizationAPI.signIn({
+          email: this.email,
+          password: this.password,
+        });
+
+        const { data } = response;
+
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+
+        localStorage.setItem("token", data.token);
+
+        this.$router.push("/restaurants");
+
+      } catch (error) {
+        this.isProcessing = false;
+        this.password = "";
+
+        Toast.fire({
+          icon: "warning",
+          title: "帳號密碼錯誤",
+        });
+
+        console.log(error);
+      }
     },
   },
 };
