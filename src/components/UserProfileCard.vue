@@ -1,33 +1,33 @@
 <template>
   <div class="row no-gutters">
     <div class="col-md-4">
-      <img :src="user.profile.image" width="300px" height="300px" />
+      <img :src="user.image ? user.image : 'https://image.cache.storm.mg/styles/smg-800x533-fp/s3/media/image/2021/06/17/20210617-045327_U22834_M695876_d6f7.jpeg?itok=Nzun_aAN'" width="300px" height="300px" />
     </div>
     <div class="col-md-8">
       <div class="card-body">
-        <h5 class="card-title">{{ user.profile.name }}</h5>
-        <p class="card-text">{{ user.profile.email }}</p>
+        <h5 class="card-title">{{ user.name }}</h5>
+        <p class="card-text">{{ user.email }}</p>
         <ul class="list-unstyled list-inline">
           <li>
-            <strong>{{ user.profile.Comments.length }}</strong> 已評論餐廳
+            <strong>{{ user.Comments.length }}</strong> 已評論餐廳
           </li>
           <li>
-            <strong>{{ user.profile.FavoritedRestaurants.length }}</strong>
+            <strong>{{ user.FavoritedRestaurants.length }}</strong>
             收藏的餐廳
           </li>
           <li>
-            <strong>{{ user.profile.Followings.length }}</strong> followings
+            <strong>{{ user.Followings.length }}</strong> followings
             (追蹤者)
           </li>
           <li>
-            <strong>{{ user.profile.Followers.length }}</strong> followers
+            <strong>{{ user.Followers.length }}</strong> followers
             (追隨者)
           </li>
         </ul>
         <p>
           <router-link
             :to="{ name: 'user-edit', params: { id: currentUser.id } }"
-            v-if="currentUser.id == user.profile.id"
+            v-if="currentUser.id == user.id"
           >
             <button type="submit" class="btn btn-primary">edit</button>
           </router-link>
@@ -54,16 +54,9 @@
 </template>
 
 <script>  //user.profile.id = 1    currentUser.id = 1
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "管理者",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import {mapState} from 'vuex'
+import usersAPI from '../api/users'
+import {Toast} from '../utility/helpers'
 
 export default {
   props: {
@@ -74,24 +67,77 @@ export default {
   },
   data() {
     return {
-      currentUser: {},
-      user: {},
+      user: {
+        id: -1,
+        name: "",
+        email: "",
+        password: "",
+        isAdmin: false,
+        image: "",
+        createdAt: "",
+        updatedAt: "",
+        Comments: [],
+        FavoritedRestaurants: [],
+        Followers: [],
+        Followings: [],
+        isFollowed: false
+      },
     };
+  },
+  computed: {
+    ...mapState(['currentUser'])
   },
   methods: {
     fetchUser() {
-      this.currentUser = dummyUser.currentUser;
-      this.user = this.initialUser;
+      this.user = {
+        ...this.user,
+        ...this.initialUser
+      }
     },
-    addFollowing() {
-      this.user.isFollowed = true;
+    async addFollowing() {
+      try {
+        const {data} = await usersAPI.addFollowing({userId: this.user.id})
+
+        if(data.status !== 'success') {
+          throw new Error(data.message)
+        }
+
+        this.user.isFollowed = true;
+
+      }
+      catch(error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將使用者加入追蹤'
+        })
+      }
     },
-    deleteFollowing() {
+    async deleteFollowing() {
+      try {
+        const {data} = await usersAPI.removeFollowing({userId: this.user.id})
+
+        if(data.status !== 'success') {
+          throw new Error(data.message)
+        }
+
       this.user.isFollowed = false;
+
+      }
+      catch(error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將使用者移除追蹤'
+        })
+      }
     },
   },
   created() {
     this.fetchUser();
   },
+  watch: {
+    initialUser() {
+      this.fetchUser()
+    }
+  }
 };
 </script>

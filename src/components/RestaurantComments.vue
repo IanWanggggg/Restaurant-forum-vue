@@ -30,17 +30,9 @@
 
 <script>
 import { fromNowFilter } from "../utility/mixins";
-
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "管理者",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import { mapState } from "vuex";
+import commentsAPI from "../api/comments";
+import { Toast } from "../utility/helpers";
 
 export default {
   props: {
@@ -49,15 +41,26 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      currentUser: dummyUser.currentUser,
-    };
+  computed: {
+    ...mapState(["currentUser"]),
   },
   mixins: [fromNowFilter],
   methods: {
-    handleDeleteButtonClick(commentId) {
-      this.$emit("after-delete-comment", commentId);
+    async handleDeleteButtonClick(commentId) {
+      try {
+        const { data } = await commentsAPI.delete({ commentId });
+
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+
+        this.$emit("after-delete-comment", commentId);
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法刪除評論",
+        });
+      }
     },
   },
 };

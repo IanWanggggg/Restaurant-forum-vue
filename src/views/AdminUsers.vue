@@ -20,7 +20,7 @@
           <td v-if="!(user.id === currentUser.id)">
             <button
               v-if="user.isAdmin"
-              @click.stop.prevent="toggleUserRole(user.id)"
+              @click.stop.prevent="toggleUserRole({userId:user.id, isAdmin: user.isAdmin})"
               type="button"
               class="btn btn-link"
             >
@@ -28,7 +28,7 @@
             </button>
             <button
               v-if="!user.isAdmin"
-              @click.stop.prevent="toggleUserRole(user.id)"
+              @click.stop.prevent="toggleUserRole({userId: user.id, isAdmin: user.isAdmin})"
               type="button"
               class="btn btn-link"
             >
@@ -43,52 +43,9 @@
 
 <script>
 import AdminNav from "../components/AdminNav.vue";
-
-const dummyData = {
-  users: [
-    {
-      id: 1,
-      name: "root",
-      email: "root@example.com",
-      password: "$2a$10$15QlzrLsEi9vBujiAQckgOuH/gEZjE9jrFc3VUhlfu7FrikYl2qPC",
-      isAdmin: true,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-    },
-    {
-      id: 2,
-      name: "user1",
-      email: "user1@example.com",
-      password: "$2a$10$w/aEQgNLYZT/8efkQgC1OOUHqpjT1uJejcb0rfHUJCVm71bS8NsTO",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-    },
-    {
-      id: 3,
-      name: "user2",
-      email: "user2@example.com",
-      password: "$2a$10$aKNVtGam2Y3sVxssM0vqBOh1Ma1f263CTtIfgyypD6AhDvtSyy426",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-04-19T07:27:20.000Z",
-      updatedAt: "2022-04-19T07:27:20.000Z",
-    },
-  ],
-};
-
-const currentUser = {
-  id: 1,
-  name: "root",
-  email: "root@example.com",
-  password: "$2a$10$15QlzrLsEi9vBujiAQckgOuH/gEZjE9jrFc3VUhlfu7FrikYl2qPC",
-  isAdmin: true,
-  image: null,
-  createdAt: "2022-04-19T07:27:20.000Z",
-  updatedAt: "2022-04-19T07:27:20.000Z",
-};
+import { mapState } from "vuex";
+import adminAPI from "../api/admin";
+import { Toast } from "../utility/helpers";
 
 export default {
   components: {
@@ -97,24 +54,43 @@ export default {
   data() {
     return {
       users: [],
-      currentUser: {}
     };
   },
+  computed: {
+    ...mapState(["currentUser"]),
+  },
   methods: {
-    fetchUsers() {
-      this.users = dummyData.users;
-      this.currentUser = currentUser
+    async fetchUsers() {
+      try {
+        const { data } = await adminAPI.users.get();
+        console.log(data);
+        this.users = data.users;
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法取得使用者資料",
+        });
+      }
     },
-    toggleUserRole(userId) {
-      this.users = this.users.map(function (user) {
-        if (user.id === userId) {
-          return {
-            ...user,
-            isAdmin: !user.isAdmin,
-          };
-        }
-        return user;
-      });
+    async toggleUserRole({userId, isAdmin}) {
+      try {
+        const { data } = await adminAPI.users.setAdmin({ userId, isAdmin: (!isAdmin).toString() });
+        console.log(data);
+        this.users = this.users.map(function (user) {
+          if (user.id === userId) {
+            return {
+              ...user,
+              isAdmin: !user.isAdmin,
+            };
+          }
+          return user;
+        });
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法設定使用者為admin",
+        });
+      }
     },
   },
   created() {

@@ -2,6 +2,16 @@ import { apiHelper } from "../utility/helpers";
 const getToken = () => {return localStorage.getItem('token')}
 
 export default {
+  getCurrentUser() {
+    return apiHelper.get('/get_current_user', {
+      headers: {Authorization: `Bearer ${getToken()}`}
+    })
+  },
+  get({userId}) {
+    return apiHelper.get(`/users/${userId}`, {
+      headers: {Authorization: `Bearer ${getToken()}`}
+    })
+  },
   addFavorite({restaurantId}) {
     return apiHelper.post(`/favorite/${restaurantId}`, null ,{
       headers: { Authorization: `Bearer ${getToken()}`}
@@ -37,5 +47,10 @@ export default {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
   },
+  update({userId, formData}) {
+    return apiHelper.put(`/users/${userId}`, formData, {
+      headers: {Authorization: `Bearer ${getToken()}`}
+    })
+  }
 
 }

@@ -1,35 +1,35 @@
 <template>
   <div class="row">
     <div class="col-md-12 mb-3">
-      <h1>Judy Runte</h1>
+      <h1>{{ restaurant.name }}</h1>
       <p class="badge badge-secondary mt-1 mb-3">義大利料理</p>
     </div>
     <div class="col-lg-4">
       <img
         class="img-responsive center-block"
-        src="https://loremflickr.com/320/240/food,dessert,restaurant/"
+        :src="restaurant.image"
         style="width: 250px; margin-bottom: 25px"
       />
       <div class="contact-info-wrap">
         <ul class="list-unstyled">
           <li>
             <strong>Opening Hour:</strong>
-            08:00
+            {{ restaurant.openingHours }}
           </li>
           <li>
             <strong>Tel:</strong>
-            (918) 827-1962
+            {{ restaurant.tel }}
           </li>
           <li>
             <strong>Address:</strong>
-            98138 Elisa Road
+            {{ restaurant.address }}
           </li>
         </ul>
       </div>
     </div>
     <div class="col-lg-8">
       <p>{{ restaurant.description }}</p>
-      <a class="btn btn-primary btn-border mr-2" href="#">Dashboard</a>
+      <router-link class="btn btn-primary btn-border mr-2" :to="{name: 'restaurant-dashboard', params: {id: restaurant.id}}">Dashboard</router-link>
 
       <button
         v-if="restaurant.isFavorited"
@@ -68,6 +68,9 @@
 </template>
 
 <script>
+import usersAPI from "../api/users";
+import { Toast } from "../utility/helpers";
+
 export default {
   props: {
     initialRestaurant: {
@@ -80,30 +83,98 @@ export default {
       restaurant: this.initialRestaurant,
     };
   },
+  watch: {
+    initialRestaurant(newValue) {
+      this.restaurant = {
+        ...this.restaurant,
+        ...newValue,
+      };
+    },
+  },
   methods: {
-    addFavorite() {
-      this.restaurant = {
-        ...this.restaurant,
-        isFavorited: true,
-      };
+    async addFavorite() {
+      try {
+        const { data } = await usersAPI.addFavorite({
+          restaurantId: this.restaurant.id,
+        });
+
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+
+        this.restaurant = {
+          ...this.restaurant,
+          isFavorited: true,
+        };
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法將餐廳加入最愛",
+        });
+      }
     },
-    deleteFavorite() {
-      this.restaurant = {
-        ...this.restaurant,
-        isFavorited: false,
-      };
+    async deleteFavorite() {
+      try {
+        const { data } = await usersAPI.deleteFavorite({
+          restaurantId: this.restaurant.id,
+        });
+
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+
+        this.restaurant = {
+          ...this.restaurant,
+          isFavorited: false,
+        };
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法將餐廳移除最愛",
+        });
+      }
     },
-    addLike() {
+    async addLike() {
+      try {
+        const {data} = await usersAPI.addLike({restaurantId: this.restaurant.id})
+
+        if(data.status !== 'success') {
+          throw new Error(data.message)
+        }
+
       this.restaurant = {
         ...this.restaurant,
         isLiked: true,
       };
+
+      }
+      catch(error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將餐廳加入Like'
+        })
+      }
     },
-    deleteLike() {
+    async deleteLike() {
+      try {
+        const {data} = await usersAPI.deleteLike({restaurantId: this.restaurant.id})
+
+        if(data.status !== 'success') {
+          throw new Error(data.message)
+        }
+
       this.restaurant = {
         ...this.restaurant,
         isLiked: false,
       };
+
+      }
+      catch(error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將餐廳移除Like'
+        })
+      }
     },
   },
 };

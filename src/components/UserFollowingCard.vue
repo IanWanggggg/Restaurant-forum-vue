@@ -1,9 +1,9 @@
 <template>
   <div class="card">
-    <div class="card-header"><strong>{{user.profile.Followings.length}}</strong> followings (追蹤者)</div>
+    <div class="card-header"><strong>{{followings.length}}</strong> followings (追蹤者)</div>
     <div class="card-body">
 
-      <router-link v-for="following in user.profile.Followings" :key="following.id" :to="{name: 'user', params: {id: following.id}}">
+      <router-link v-for="following in followings" :key="following.id" :to="{name: 'user', params: {id: following.id}}">
         <img
           :src="following.image"
           width="60"
@@ -19,10 +19,24 @@
 <script>
 export default {
   props: {
-    user: {
-      type: Object,
+    initialFollowings: {
+      type: Array,
       required: true
     }
+  },
+  data() {
+    return {
+      followings: this.initialFollowings
+    }
+  },
+    watch: {
+    initialFollowings(newValue) {
+      this.followings = [
+        ...this.followings,
+        ...newValue
+      ]
+    }
   }
+
 }
 </script>
