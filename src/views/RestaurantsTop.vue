@@ -1,6 +1,10 @@
 <template>
   <div class="container py-5">
     <NavTabs />
+
+    <Spinner v-if="isLoading"/>
+
+    <template v-else>
     <h1 class="mt-5">人氣餐廳</h1>
 
     <hr />
@@ -57,6 +61,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -65,24 +70,30 @@ import NavTabs from "../components/NavTabs.vue";
 import restaurantsAPI from "../api/restaurants";
 import usersAPI from "../api/users";
 import { Toast } from "../utility/helpers";
+import Spinner from '../components/Spinner.vue'
 
 export default {
   components: {
     NavTabs,
+    Spinner
   },
 
   data() {
     return {
       topRestaurants: [],
+      isLoading: true
     };
   },
 
   methods: {
     async fetchTopRestaurants() {
       try {
+        this.isLoading = true
         const { data } = await restaurantsAPI.getRestaurantTop();
         this.topRestaurants = data.restaurants;
+        this.isLoading = false
       } catch (error) {
+        this.isLoading = false
         Toast.fire({
           icon: "error",
           title: "無法取得餐廳排行，請稍後再試",

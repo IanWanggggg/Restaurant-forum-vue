@@ -4,22 +4,30 @@
 
     <RestaurantsNavPills :categories="categories" />
 
-    <div class="row">
-      <RestaurantCard
-        v-for="restaurant in restaurants"
-        :key="restaurant.id"
-        :initial-restaurant="restaurant"
-      />
-    </div>
+    <Spinner v-if="isLoading" />
 
-    <RestaurantsPagination
-      v-if="totalPage.length > 1"
-      :totalPage="totalPage"
-      :categoryId="categoryId"
-      :currentPage="page"
-      :previousPage="prev"
-      :nextPage="next"
-    />
+    <template v-else>
+      <div class="row">
+        <RestaurantCard
+          v-for="restaurant in restaurants"
+          :key="restaurant.id"
+          :initial-restaurant="restaurant"
+        />
+      </div>
+
+      <RestaurantsPagination
+        v-if="totalPage.length > 1"
+        :totalPage="totalPage"
+        :categoryId="categoryId"
+        :currentPage="page"
+        :previousPage="prev"
+        :nextPage="next"
+      />
+
+      <div v-if="restaurants.length < 1">
+        此類別目前無餐廳資料
+      </div>
+    </template>
   </div>
 </template>
 
@@ -30,6 +38,7 @@ import RestaurantsNavPills from "../components/RestaurantsNavPills.vue";
 import RestaurantsPagination from "../components/RestaurantsPagination.vue";
 import restaurantsApi from "../api/restaurants";
 import { Toast } from "../utility/helpers";
+import Spinner from "../components/Spinner.vue";
 
 export default {
   components: {
@@ -37,6 +46,7 @@ export default {
     RestaurantCard,
     RestaurantsNavPills,
     RestaurantsPagination,
+    Spinner,
   },
   data() {
     return {
@@ -47,11 +57,13 @@ export default {
       totalPage: [],
       prev: -1,
       next: -1,
+      isLoading: true,
     };
   },
   methods: {
     async fetchRestaurants({ page, categoryId }) {
       try {
+        this.isLoading = true;
         const response = await restaurantsApi.getRestaurants({
           page: page,
           categoryId: categoryId,
@@ -64,7 +76,9 @@ export default {
         this.totalPage = response.data.totalPage;
         this.prev = response.data.prev;
         this.next = response.data.next;
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         console.log(error);
         Toast.fire({
           icon: "error",

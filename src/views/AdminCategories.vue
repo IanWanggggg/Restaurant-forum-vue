@@ -24,85 +24,96 @@
         </div>
       </div>
     </form>
-    <table class="table">
-      <thead class="thead-dark">
-        <tr>
-          <th scope="col" width="60">#</th>
-          <th scope="col">Category Name</th>
-          <th scope="col" width="210">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="category in categories" :key="category.id">
-          <th scope="row">
-            {{ category.id }}
-          </th>
-          <td class="position-relative">
-            <div v-show="!category.isEditing" class="category-name">
-              {{ category.name }}
-            </div>
-            <input
-              v-show="category.isEditing"
-              v-model="category.name"
-              type="text"
-              class="form-control"
-            />
-            <span
-              v-show="category.isEditing"
-              @click="handleCancel(category.id)"
-              class="cancel"
-            >
-              ✕
-            </span>
-          </td>
-          <td class="d-flex justify-content-between">
-            <button
-              v-show="!category.isEditing"
-              @click.stop.prevent="toggleIsEditing(category.id)"
-              type="button"
-              class="btn btn-link mr-2"
-            >
-              Edit
-            </button>
-            <button
-              v-show="category.isEditing"
-              @click.stop.prevent="
-                updateCategory({ categoryId: category.id, name: category.name })
-              "
-              type="button"
-              class="btn btn-link mr-2"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              class="btn btn-link mr-2"
-              @click.stop.prevent="deleteCategory(category.id)"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+    <Spinner v-if="isLoading" />
+
+    <template v-else>
+      <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col" width="60">#</th>
+            <th scope="col">Category Name</th>
+            <th scope="col" width="210">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="category in categories" :key="category.id">
+            <th scope="row">
+              {{ category.id }}
+            </th>
+            <td class="position-relative">
+              <div v-show="!category.isEditing" class="category-name">
+                {{ category.name }}
+              </div>
+              <input
+                v-show="category.isEditing"
+                v-model="category.name"
+                type="text"
+                class="form-control"
+              />
+              <span
+                v-show="category.isEditing"
+                @click="handleCancel(category.id)"
+                class="cancel"
+              >
+                ✕
+              </span>
+            </td>
+            <td class="d-flex justify-content-between">
+              <button
+                v-show="!category.isEditing"
+                @click.stop.prevent="toggleIsEditing(category.id)"
+                type="button"
+                class="btn btn-link mr-2"
+              >
+                Edit
+              </button>
+              <button
+                v-show="category.isEditing"
+                @click.stop.prevent="
+                  updateCategory({
+                    categoryId: category.id,
+                    name: category.name,
+                  })
+                "
+                type="button"
+                class="btn btn-link mr-2"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                class="btn btn-link mr-2"
+                @click.stop.prevent="deleteCategory(category.id)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
   </div>
 </template>
 
 <script>
-import AdminNav from "@/components/AdminNav";
+import AdminNav from "../components/AdminNav";
 import adminAPI from "../api/admin";
 import { Toast } from "../utility/helpers";
+import Spinner from "../components/Spinner.vue";
 //  2. 定義暫時使用的資料
 
 export default {
   components: {
     AdminNav,
+    Spinner,
   },
   // 3. 定義 Vue 中使用的 data 資料
   data() {
     return {
       categories: [],
       newCategoryName: "",
+      isLoading: true,
     };
   },
   // 5. 調用 `fetchCategories` 方法
@@ -113,6 +124,7 @@ export default {
     // 4. 定義 `fetchCategories` 方法，把 `dummyData` 帶入 Vue 物件
     async fetchCategories() {
       try {
+        this.isLoading = true;
         const { data } = await adminAPI.categories.get();
 
         this.categories = data.categories.map(function (category) {
@@ -122,8 +134,9 @@ export default {
             nameCached: "",
           };
         });
-
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         Toast.fire({
           icon: "error",
           title: "無法取得類別資料",
@@ -139,9 +152,12 @@ export default {
           });
           return;
         } else if (
-          this.categories.find((category) =>
-              category.name.trim().toLowerCase() === this.newCategoryName.trim().toLowerCase()
-          )) {
+          this.categories.find(
+            (category) =>
+              category.name.trim().toLowerCase() ===
+              this.newCategoryName.trim().toLowerCase()
+          )
+        ) {
           Toast.fire({
             icon: "warning",
             title: "此類別已有存在",
@@ -169,7 +185,6 @@ export default {
             title: "新增了一筆類別",
           });
         }
-        
       } catch (error) {
         Toast.fire({
           icon: "error",

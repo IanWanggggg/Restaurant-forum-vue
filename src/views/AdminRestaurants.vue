@@ -17,7 +17,7 @@ import AdminRestaurantsTable from '../components/AdminRestaurantsTable.vue'
 export default {
   components: {
     AdminNav,
-    AdminRestaurantsTable
+    AdminRestaurantsTable,
   },
 };
 </script>
